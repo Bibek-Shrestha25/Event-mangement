@@ -441,9 +441,27 @@ class Action
 	function insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $email, $venueId)
 	{
 		// calculate final rate
-		// TODO: insert rating
-		// OTP validate
+		$finalRate = ($cleanliness + $ambience + $facilities + $services) / 4;
+		// start DB transaction
+		$this->db->begin_transaction();
+		// insert rating
+		try {
+			$rating = $this->db->query("INSERT INTO venue_rating set venue_booking_id = $bookId, email = '$email', venue_id = $venueId");
+			if ($rating) {
+				$rating_id = $this->db->insert_id;
+				$rating_params = $this->db->query("INSERT INTO venue_rating_parameters set venue_rating_id = $rating_id, cleanliness = $cleanliness, ambience = $ambience, facilities = $facilities, service = $services");
+				if ($rating_params) {
+					$this->db->commit();
+					return 1;
+				}
+			}
+		} catch (Exception $e) {
+			$this->db->rollback();
+			return 0;
+		}
 
+		// end DB transaction
+		// OTP validate
 	}
 
 	function insertOrUpdateWeight($startDate, $endDate, $weight, $id)
