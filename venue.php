@@ -1,5 +1,7 @@
 <?php
 include 'admin/db_connect.php';
+include_once 'admin/admin_class.php';
+$crud = new Action();
 ?>
 <style>
     #portfolio .img-fluid {
@@ -181,7 +183,7 @@ include 'admin/db_connect.php';
                                         <!-- Rating Stars -->
                                         <div class="rating-stars <?= $starDirection ?>" data-id="<?php echo $row['id'] ?>">
                                             <?php
-                                            $rating = $row['rating'] ?? round(1 + mt_rand() / mt_getrandmax() * 4, 1); // Assume 'rating' column holds the venue rating
+                                            $rating = $crud->showWeightRate($row['id'])['weighted_average_rating'];
                                             for ($i = 1; $i <= 5; $i++):
                                                 if ($i <= floor($rating)) {
                                                     // Fully filled star
