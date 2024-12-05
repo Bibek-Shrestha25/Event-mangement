@@ -17,7 +17,7 @@
 <body>
     <div class="container mt-5">
         <h2 class="mb-4 text-center">Dynamic Rating Weights</h2>
-        <form id="ratingForm" class="card p-4 shadow-sm">
+        <form id="ratingForm" class="card p-4 shadow-sm" action="ajax.php?action=save_rating_weight" method="POST">
             <div id="formFields">
                 <div class="row g-3 align-items-center mb-3" id="rangeGroup-0">
                     <div class="col-md-3">
@@ -35,6 +35,11 @@
                     <div class="col-md-3 text-end">
                         <button type="button" class="btn btn-primary addRange">+</button>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-sm btn-block btn-success col-sm-2">Submit</button>
                 </div>
             </div>
         </form>

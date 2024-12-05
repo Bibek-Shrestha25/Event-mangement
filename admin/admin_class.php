@@ -469,6 +469,58 @@ class Action
 		// 
 	}
 
+
+	function saveRatingWeight()
+	{
+		extract($_POST);
+		$save = 0;
+
+		// Start transaction
+		$this->db->begin_transaction();
+
+		try {
+			for ($i = 0; $i < count($startRange); $i++) {
+				$days_range_start = intval($startRange[$i]);
+				$days_range_end = intval($endRange[$i]);
+				$weight_value = floatval($weight[$i]);
+
+				// Check for overlapping ranges before inserting
+				$stmt = $this->db->prepare("SELECT COUNT(*) FROM rating_weights WHERE (days_range_start <= ? AND days_range_end >= ?) OR (days_range_start <= ? AND days_range_end >= ?)");
+				$stmt->bind_param("iiii", $days_range_end, $days_range_start, $days_range_end, $days_range_start);
+				$stmt->execute();
+				$stmt->bind_result($count);
+				$stmt->fetch();
+				$stmt->close();
+
+				if ($count > 0) {
+					throw new Exception("Overlapping date range detected");
+				}
+
+				$stmt = $this->db->prepare("INSERT INTO rating_weights (days_range_start, days_range_end, weight) VALUES (?, ?, ?)");
+				if (!$stmt) {
+					throw new Exception("Failed to prepare statement: " . $this->db->error);
+				}
+
+				$stmt->bind_param("iid", $days_range_start, $days_range_end, $weight_value);
+				if (!$stmt->execute()) {
+					throw new Exception("Failed to execute statement: " . $stmt->error);
+				}
+				$stmt->close();
+			}
+
+			// Commit transaction
+			$this->db->commit();
+			$save = 1;
+		} catch (Exception $e) {
+			// Rollback transaction
+			$this->db->rollback();
+			error_log($e->getMessage());
+			$save = 0;
+		}
+
+		return $save;
+	}
+
 	function showWeightRate()
 	{
 		/*

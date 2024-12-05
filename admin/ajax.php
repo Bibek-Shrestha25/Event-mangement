@@ -130,3 +130,12 @@ if($action == "get_pdetails"){
 	if($get)
 		echo $get;
 }
+
+if ($action == "save_rating_weight") {
+    $save = $crud->saveRatingWeight();
+    if ($save) {
+        echo json_encode(['success' => true, 'message' => 'Data successfully saved']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to save data']);
+    }
+}
