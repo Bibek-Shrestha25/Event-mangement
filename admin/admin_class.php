@@ -1,6 +1,6 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+	session_start();
 }
 ini_set('display_errors', 1);
 include_once __DIR__ . '/../Mailer.php';
@@ -245,15 +245,15 @@ class Action
 		} else {
 			if ($status == 1) {
 				$venue = $this->db->query("SELECT * FROM venue WHERE id = $venue_id")->fetch_array();
-			
+
 				$testData = json_encode(['bookid' => $id, 'email' => $email, 'venuid' => $venue_id]);
-			
+
 				$param = $this->encryptData($testData);
-			
+
 				$link = "http://localhost/eventms/?rate=" . $param;
-			
+
 				$subject = "Venue Booking Confirmation";
-			
+
 				$body = "
 				<html>
 				<head>
@@ -315,7 +315,7 @@ class Action
 					</div>
 				</body>
 				</html>";
-			
+
 				// Use your mailer to send the email
 				$mailer = new Mailer();
 				$send = $mailer->sendBasicMail($email, $name, $subject, $body);
@@ -682,33 +682,58 @@ class Action
 			v.id;`;
 	}
 
-
-	function xxxx_xxxx()
+	function getWeightedRateOfAll()
 	{
-		`SELECT 
-			v.id AS venue_id,
-			v.venue AS venue_name,
-			COALESCE(SUM(
-				-- Weighted cleanliness
-				(vrp.cleanliness * rw.weight) +
-				-- Weighted service
-				(vrp.service * rw.weight) +
-				-- Weighted facilities
-				(vrp.facilities * rw.weight) +
-				-- Weighted ambience
-				(vrp.ambience * rw.weight)
-			) / NULLIF(SUM(rw.weight), 0), 0) AS weighted_average_rating
-		FROM 
-			venue v
-		LEFT JOIN 
-			venue_rating vr ON v.id = vr.venue_id
-		LEFT JOIN 
-			venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
-		LEFT JOIN 
-			rating_weights rw ON DATEDIFF(NOW(), vr.date_created) BETWEEN rw.days_range_start AND rw.days_range_end
-		GROUP BY 
-			v.id, v.venue
-		ORDER BY 
-			weighted_average_rating DESC;`;
+		$query = 'SELECT 
+					v.id AS venue_id,
+					v.venue AS venue_name,
+					COALESCE(
+						LEAST(
+							GREATEST(
+								-- Weighted sum of review averages divided by total weight
+								SUM(
+									(
+										(vrp.cleanliness + vrp.service + vrp.facilities + vrp.ambience) / 4
+									) * COALESCE(
+										rw.weight,
+										(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1) -- Default to the oldest weight
+									)
+								) / NULLIF(
+									SUM(
+										COALESCE(
+											rw.weight,
+											(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1)
+										)
+									), 
+									0
+								),
+								1  -- Ensure the rating is not below 1
+							),
+							5  -- Ensure the rating does not exceed 5
+						), 
+						0  -- Default to 0 if no ratings exist
+					) AS weighted_average_rating
+				FROM 
+					venue v
+				LEFT JOIN 
+					venue_rating vr ON v.id = vr.venue_id
+				LEFT JOIN 
+					venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
+				LEFT JOIN 
+					rating_weights rw ON DATEDIFF(NOW(), vr.date_created) BETWEEN rw.days_range_start AND rw.days_range_end
+				GROUP BY 
+					v.id, v.venue
+				ORDER BY 
+					weighted_average_rating DESC;
+			';
+
+		$result = $this->db->query($query);
+		$data = [];
+		if ($result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$data[] = $row;
+			}
+		}
+		return $data;
 	}
 }
