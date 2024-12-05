@@ -19,12 +19,12 @@ class Mailer
     private function configureSMTP()
     {
         $this->mail->isSMTP();
-        $this->mail->Host = getenv('SMTP_HOST');
+        $this->mail->Host = 'sandbox.smtp.mailtrap.io';
         $this->mail->SMTPAuth = true;
-        $this->mail->Username = getenv('SMTP_USERNAME');
-        $this->mail->Password = getenv('SMTP_PASSWORD');
+        $this->mail->Username = '518802855ffb30';
+        $this->mail->Password = 'df5cbf85e81548';
         $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $this->mail->Port = getenv('SMTP_PORT');
+        $this->mail->Port = 2525;
     }
 
     // Set email recipient details
