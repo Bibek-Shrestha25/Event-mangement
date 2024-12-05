@@ -1,13 +1,16 @@
 CREATE TABLE `venue_rating` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `venue_id` INT(30) NOT NULL,  -- Foreign key to `venue` table
+  `booking_id` INT(30) NOT NULL,  -- Foreign key to `venue_booking` table
   `rater_name` VARCHAR(255) NOT NULL,  -- Name of the rater
   `rater_email` VARCHAR(100) NOT NULL,  -- Email of the rater
+  `otp` VARCHAR(6) DEFAULT NULL,  -- OTP sent to the rater's email
   `otp_verified` TINYINT(1) DEFAULT 0,  -- 0 = Not Verified, 1 = Verified via OTP
   `comment` TEXT DEFAULT NULL,  -- Optional feedback from the user
   `date_created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`venue_id`) REFERENCES `venue`(`id`) ON DELETE CASCADE
+  Foreign key (`booking_id`) REFERENCES `venue_booking`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `venue_rating_parameters` (
