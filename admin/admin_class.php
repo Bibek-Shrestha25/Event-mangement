@@ -438,29 +438,43 @@ class Action
 		}
 	}
 
-	function insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $email, $venueId)
+	function insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $email, $venueId, $comment)
 	{
-		// calculate final rate
-		$finalRate = ($cleanliness + $ambience + $facilities + $services) / 4;
-		// start DB transaction
-		$this->db->begin_transaction();
-		// insert rating
-		try {
-			$rating = $this->db->query("INSERT INTO venue_rating set venue_booking_id = $bookId, email = '$email', venue_id = $venueId");
-			if ($rating) {
-				$rating_id = $this->db->insert_id;
-				$rating_params = $this->db->query("INSERT INTO venue_rating_parameters set venue_rating_id = $rating_id, cleanliness = $cleanliness, ambience = $ambience, facilities = $facilities, service = $services");
-				if ($rating_params) {
-					$this->db->commit();
-					return 1;
-				}
-			}
-		} catch (Exception $e) {
-			$this->db->rollback();
-			return 0;
-		}
+		$stmt = $this->db->prepare("SELECT name FROM venue_booking WHERE id = ? AND email = ? AND venue_id = ?");
+		$stmt->bind_param("iss", $bookId, $email, $venueId);
+		$stmt->execute();
+		$stmt->bind_result($name);
+		$stmt->fetch();
+		$stmt->close();
 
-		// end DB transaction
+		$name = $name ?? "Anonymous";
+
+		$this->db->begin_transaction();
+
+		try {
+			// Insert into venue_rating
+			$stmt = $this->db->prepare("INSERT INTO venue_rating (venue_id, rater_name, rater_email, comment) VALUES (?, ?, ?, ?)");
+			$stmt->bind_param("isss", $venueId, $name, $email, $comment);
+			$stmt->execute();
+			$ratingId = $stmt->insert_id;
+			$stmt->close();
+
+			// Insert into venue_rating_parameters
+			$stmt = $this->db->prepare("INSERT INTO venue_rating_parameters (venue_rating_id, cleanliness, service, facilities, ambience) VALUES (?, ?, ?, ?, ?)");
+			$stmt->bind_param("idddd", $ratingId, $cleanliness, $services, $facilities, $ambience);
+			$stmt->execute();
+			$stmt->close();
+
+			// Commit transaction
+			$this->db->commit();
+		} catch (Exception $e) {
+			// Rollback transaction on error
+			$this->db->rollback();
+			throw $e;
+		} finally {
+			// Close connection
+			$this->db->close();
+		}
 		// OTP validate
 	}
 
