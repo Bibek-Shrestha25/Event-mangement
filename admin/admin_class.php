@@ -554,8 +554,8 @@ class Action
 
 		try {
 			// Insert into venue_rating
-			$stmt = $this->db->prepare("INSERT INTO venue_rating (venue_id, rater_name, rater_email, comment) VALUES (?, ?, ?, ?)");
-			$stmt->bind_param("isss", $venueId, $name, $email, $comment);
+			$stmt = $this->db->prepare("INSERT INTO venue_rating (venue_id, booking_id, rater_name, rater_email, comment) VALUES (?, ?, ?, ?, ?)");
+			$stmt->bind_param("iisss", $venueId, $bookId, $name, $email, $comment);
 			$stmt->execute();
 			$ratingId = $stmt->insert_id;
 			$stmt->close();
