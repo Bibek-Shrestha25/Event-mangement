@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $emailId = $_POST['email'];
     $venueId = $_POST['venueId'];
 
-    $crud->insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $emailId, $venueId, $comment = '');
+    $crud->insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $emailId, $venueId, $comment);
 
     echo "<div class='alert alert-success'>Thank you for your feedback!</div>";
 }
