@@ -1,22 +1,47 @@
 <?php
 include 'admin/db_connect.php';
+include_once 'admin/admin_class.php';
+$crud = new Action();
+
+try {
+
+    $bookId = isset($_GET['rate']) ? $_GET['rate'] : throw new Exception("Invalid Request");
+    
+    $testData = json_encode(['bookid' => 13, 'email' => 'test@test.com', 'venuid' => 1]);
+    
+    $data = $crud->decryptData($bookId);
+    if (!$data) {
+        throw new Exception("Invalid Request");
+    }
+
+    $data = json_decode($data, true);
+    extract($data);
+
+    $chk = $conn->query("SELECT * FROM venue_booking where venue_id = '{$venuid}' and email = '{$email}' and id = '{$bookid}' ");
+
+    if ($chk->num_rows <= 0) {
+        throw new Exception("Invalid Request");
+    }
+    
+} catch (Exception $e) {
+    header('location:index.php?page=home');
+}
 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve the ratings from the form
-    include 'admin_class.php';
 
     $cleanliness = $_POST['cleanliness'];
     $ambience = $_POST['ambience'];
     $facilities = $_POST['facilities'];
     $services = $_POST['services'];
+    $comment = $_POST['comment'] ??  '';
 
     $bookId = $_GET['bookid'];
     $email = $_GET['email'];
     $venueId = $_GET['venuid'];
 
-    $crud = new Action();
-    $crud->insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $email, $venueId);
+    $crud->insertRating($cleanliness, $ambience, $facilities, $services, $bookId, $email, $venueId, $comment = '');
 
     echo "<div class='alert alert-success'>Thank you for your feedback!</div>";
 }
