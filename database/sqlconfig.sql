@@ -20,10 +20,10 @@ CREATE TABLE  venue_rating (
   `date_created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 )
 
-CREATE TABLE `rating_weights` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `days_range_start` INT NOT NULL COMMENT 'Start of day range (e.g., 0 for today)',
-  `days_range_end` INT NOT NULL COMMENT 'End of day range (e.g., 30 for last 30 days)',
-  `weight` FLOAT NOT NULL COMMENT 'Weight for this day range',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE rating_weights (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    days_range_start INT NOT NULL,
+    days_range_end INT NOT NULL,
+    weight DECIMAL(5, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
