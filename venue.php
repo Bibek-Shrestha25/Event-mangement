@@ -59,6 +59,10 @@ include 'admin/db_connect.php';
         direction: rtl;
     }
 
+    .ltr {
+        direction: ltr;
+    }
+
     .venue-text {
         justify-content: center;
         align-items: center;
@@ -68,34 +72,41 @@ include 'admin/db_connect.php';
         display: flex;
         justify-content: center;
         gap: 5px;
-    }
-
-    .rating-stars i {
-        font-size: 24px;
-        border: 2px solid black;
-        border-radius: 50%;
-        padding: 5px;
-        color: transparent;
-        background-color: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .rating-stars i.active {
-        background-color: blue;
-        color: white;
-    }
-
-    .rating-label {
-        font-weight: bold;
         margin-top: 10px;
-        text-align: center;
+        position: relative;
+        align-items: center;
     }
+
+
+
+    .rating-value {
+        margin-left: 10px;
+        font-size: 14px;
+        color: #555;
+        font-weight: bold;
+    }
+
+    .action-buttons .book-venue {
+        font-size: 16px;
+        font-weight: bold;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        transition: all 0.3s ease;
+
+    }
+
+    .action-buttons .book-venue:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+
 
     .action-buttons {
         display: flex;
         justify-content: space-between;
         margin-top: 15px;
+        justify-content: center;
     }
 
     .comment-section {
@@ -125,6 +136,7 @@ include 'admin/db_connect.php';
                 while ($row = $venue->fetch_assoc()):
                     $ci++;
                     $rtl = ($ci < 3) ? '' : 'rtl';
+                    $starDirection = ($ci < 3) ? '' : 'ltr';
                     $ci = ($ci == 4) ? 0 : $ci;
                 ?>
                     <div class="col-md-6">
@@ -165,52 +177,43 @@ include 'admin/db_connect.php';
                                     <div>
                                         <h3><b class="filter-txt"><?php echo ucwords($row['venue']) ?></b></h3>
                                         <small><i><?php echo $row['address'] ?></i></small>
-                                        <div class="rating-section mt-3">
-                                            <div class="rating-label">Cleanliness</div>
-                                            <div class="rating-stars" data-id="<?php echo $row['id'] ?>">
-                                                <i class="fa fa-star" data-type="cleanliness" data-value="1"></i>
-                                                <i class="fa fa-star" data-type="cleanliness" data-value="2"></i>
-                                                <i class="fa fa-star" data-type="cleanliness" data-value="3"></i>
-                                                <i class="fa fa-star" data-type="cleanliness" data-value="4"></i>
-                                                <i class="fa fa-star" data-type="cleanliness" data-value="5"></i>
-                                            </div>
-                                            <div class="rating-label">Ambience</div>
-                                            <div class="rating-stars" data-id="<?php echo $row['id'] ?>">
-                                                <i class="fa fa-star" data-type="ambience" data-value="1"></i>
-                                                <i class="fa fa-star" data-type="ambience" data-value="2"></i>
-                                                <i class="fa fa-star" data-type="ambience" data-value="3"></i>
-                                                <i class="fa fa-star" data-type="ambience" data-value="4"></i>
-                                                <i class="fa fa-star" data-type="ambience" data-value="5"></i>
-                                            </div>
-                                            <div class="rating-label">Facilities</div>
-                                            <div class="rating-stars" data-id="<?php echo $row['id'] ?>">
-                                                <i class="fa fa-star" data-type="facilities" data-value="1"></i>
-                                                <i class="fa fa-star" data-type="facilities" data-value="2"></i>
-                                                <i class="fa fa-star" data-type="facilities" data-value="3"></i>
-                                                <i class="fa fa-star" data-type="facilities" data-value="4"></i>
-                                                <i class="fa fa-star" data-type="facilities" data-value="5"></i>
-                                            </div>
-                                            <div class="rating-label">Service</div>
-                                            <div class="rating-stars" data-id="<?php echo $row['id'] ?>">
-                                                <i class="fa fa-star" data-type="service" data-value="1"></i>
-                                                <i class="fa fa-star" data-type="service" data-value="2"></i>
-                                                <i class="fa fa-star" data-type="service" data-value="3"></i>
-                                                <i class="fa fa-star" data-type="service" data-value="4"></i>
-                                                <i class="fa fa-star" data-type="service" data-value="5"></i>
-                                            </div>
+
+                                        <!-- Rating Stars -->
+                                        <div class="rating-stars <?= $starDirection ?>" data-id="<?php echo $row['id'] ?>">
+                                            <?php
+                                            $rating = $row['rating'] ?? round(1 + mt_rand() / mt_getrandmax() * 4, 1); // Assume 'rating' column holds the venue rating
+                                            for ($i = 1; $i <= 5; $i++):
+                                                if ($i <= floor($rating)) {
+                                                    // Fully filled star
+                                                    echo '<i class="fa fa-star filled"></i>';
+                                                } elseif ($i == ceil($rating) && $rating - floor($rating) > 0) {
+                                                    // Half-filled star
+                                                    echo '<i class="fa fa-star-half-alt"></i>';
+                                                } else {
+                                                    // Empty star
+                                                    echo '<i class="far fa-star"></i>';
+                                                }
+                                            endfor;
+                                            ?>
+                                            <span class="rating-value"><?php echo number_format($rating, 1); ?></span> <!-- Show the rating value -->
                                         </div>
+
+
+
+                                        <!-- Action Buttons -->
                                         <div class="action-buttons">
-                                            <button class="btn btn-success book-venue" type="button" data-id='<?php echo $row['id'] ?>'>Book</button>
-                                            <button class="btn btn-secondary comment-btn" data-id='<?php echo $row['id'] ?>'><i class="fa fa-comment"></i> Comment</button>
-                                            <button class="btn btn-primary like-btn" data-id='<?php echo $row['id'] ?>'><i class="fa fa-thumbs-up"></i> Like</button>
+                                            <button class="btn btn-success book-venue" type="button" data-id="<?php echo $row['id'] ?>">Book</button>
                                         </div>
+
+                                        <!-- Comment Section -->
                                         <div class="comment-section" id="comment-section-<?php echo $row['id'] ?>">
                                             <textarea placeholder="Write your comment here..."></textarea>
-                                            <button class="btn btn-primary submit-comment" data-id='<?php echo $row['id'] ?>'>Submit</button>
+                                            <button class="btn btn-primary submit-comment" data-id="<?php echo $row['id'] ?>">Submit</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 <?php endwhile; ?>
@@ -228,20 +231,4 @@ include 'admin/db_connect.php';
     $('.venue-list .carousel img').click(function() {
         viewer_modal($(this).attr('src'))
     })
-
-    document.querySelectorAll('.rating-stars').forEach(container => {
-        container.querySelectorAll('i').forEach(star => {
-            star.addEventListener('click', function() {
-                const stars = Array.from(this.parentElement.querySelectorAll('i'));
-                stars.forEach(s => s.classList.remove('active')); // Remove active class from all stars
-                this.classList.add('active'); // Add active class to the clicked star
-                // Mark all previous stars as active
-                let markActive = true;
-                stars.forEach(s => {
-                    if (s === this) markActive = false;
-                    if (!markActive) s.classList.add('active');
-                });
-            });
-        });
-    });
 </script>

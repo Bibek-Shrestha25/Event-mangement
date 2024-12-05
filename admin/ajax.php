@@ -1,141 +1,143 @@
 <?php
+
 ob_start();
+
 $action = $_GET['action'];
 include 'admin_class.php';
 $crud = new Action();
 
-if($action == 'login'){
+if ($action == 'login') {
 	$login = $crud->login();
-	if($login)
+	if ($login)
 		echo $login;
 }
-if($action == 'login2'){
+if ($action == 'login2') {
 	$login = $crud->login2();
-	if($login)
+	if ($login)
 		echo $login;
 }
-if($action == 'logout'){
+if ($action == 'logout') {
 	$logout = $crud->logout();
-	if($logout)
+	if ($logout)
 		echo $logout;
 }
-if($action == 'logout2'){
+if ($action == 'logout2') {
 	$logout = $crud->logout2();
-	if($logout)
+	if ($logout)
 		echo $logout;
 }
-if($action == 'save_user'){
+if ($action == 'save_user') {
 	$save = $crud->save_user();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == 'delete_user'){
+if ($action == 'delete_user') {
 	$save = $crud->delete_user();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == 'signup'){
+if ($action == 'signup') {
 	$save = $crud->signup();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "save_settings"){
+if ($action == "save_settings") {
 	$save = $crud->save_settings();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "save_venue"){
+if ($action == "save_venue") {
 	$save = $crud->save_venue();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "save_book"){
+if ($action == "save_book") {
 	$save = $crud->save_book();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_book"){
+if ($action == "delete_book") {
 	$save = $crud->delete_book();
-	if($save)
+	if ($save)
 		echo $save;
 }
 
-if($action == "save_register"){
+if ($action == "save_register") {
 	$save = $crud->save_register();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_register"){
+if ($action == "delete_register") {
 	$save = $crud->delete_register();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_venue"){
+if ($action == "delete_venue") {
 	$save = $crud->delete_venue();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "update_order"){
+if ($action == "update_order") {
 	$save = $crud->update_order();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_order"){
+if ($action == "delete_order") {
 	$save = $crud->delete_order();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "save_event"){
+if ($action == "save_event") {
 	$save = $crud->save_event();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_event"){
+if ($action == "delete_event") {
 	$save = $crud->delete_event();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "save_artist"){
+if ($action == "save_artist") {
 	$save = $crud->save_artist();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_artist"){
+if ($action == "delete_artist") {
 	$save = $crud->delete_artist();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "get_audience_report"){
+if ($action == "get_audience_report") {
 	$get = $crud->get_audience_report();
-	if($get)
+	if ($get)
 		echo $get;
 }
-if($action == "get_venue_report"){
+if ($action == "get_venue_report") {
 	$get = $crud->get_venue_report();
-	if($get)
+	if ($get)
 		echo $get;
 }
-if($action == "save_art_fs"){
+if ($action == "save_art_fs") {
 	$save = $crud->save_art_fs();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "delete_art_fs"){
+if ($action == "delete_art_fs") {
 	$save = $crud->delete_art_fs();
-	if($save)
+	if ($save)
 		echo $save;
 }
-if($action == "get_pdetails"){
+if ($action == "get_pdetails") {
 	$get = $crud->get_pdetails();
-	if($get)
+	if ($get)
 		echo $get;
 }
 
 if ($action == "save_rating_weight") {
-    $save = $crud->saveRatingWeight();
-    if ($save) {
-        echo json_encode(['success' => true, 'message' => 'Data successfully saved']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to save data']);
-    }
+	$save = $crud->saveRatingWeight();
+	if ($save) {
+		echo json_encode(['success' => true, 'message' => 'Data successfully saved']);
+	} else {
+		echo json_encode(['success' => false, 'message' => 'Failed to save data']);
+	}
 }
