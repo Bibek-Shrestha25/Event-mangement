@@ -702,9 +702,7 @@ class Action
 		$result = $stmt->get_result();
 		$data = [];
 		if ($result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$data[] = $row;
-			}
+			$data = $result->fetch_assoc();
 		}
 		return $data;
 	}
