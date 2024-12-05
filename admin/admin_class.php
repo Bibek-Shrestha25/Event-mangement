@@ -633,7 +633,7 @@ class Action
 		return $save;
 	}
 
-	function showWeightRate()
+	function showWeightRate($id)
 	{
 		/*
 		| Algo
@@ -653,33 +653,60 @@ class Action
 		|
 		*/
 
-		$getWeightedDayRange = [];
+		$query = 'SELECT 
+					v.id AS venue_id,
+					v.venue AS venue_name,
+					COALESCE(
+						LEAST(
+							GREATEST(
+								-- Calculate weighted sum of review averages divided by total weight
+								SUM(
+									(
+										(vrp.cleanliness + vrp.service + vrp.facilities + vrp.ambience) / 4
+									) * COALESCE(
+										rw.weight,
+										(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1)  -- Fallback to oldest weight
+									)
+								) / NULLIF(
+									SUM(
+										COALESCE(
+											rw.weight,
+											(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1)
+										)
+									), 
+									0  -- Prevent division by zero
+								),
+								1  -- Ensure the rating is not below 1
+							),
+							5  -- Ensure the rating does not exceed 5
+						), 
+						0  -- Default to 0 if no ratings exist
+					) AS weighted_average_rating
+				FROM 
+					venue v
+				LEFT JOIN 
+					venue_rating vr ON v.id = vr.venue_id
+				LEFT JOIN 
+					venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
+				LEFT JOIN 
+					rating_weights rw ON DATEDIFF(NOW(), vr.date_created) BETWEEN rw.days_range_start AND rw.days_range_end
+				WHERE 
+					v.id = ?  -- Filter for the specific venue_id (replace ? with the actual ID)
+				GROUP BY 
+					v.id, v.venue;
+			';
 
-
-		`SELECT 
-			v.id AS venue_id,
-			SUM(
-				-- Weighted cleanliness
-				(vrp.cleanliness * rw.weight) +
-				-- Weighted service
-				(vrp.service * rw.weight) +
-				-- Weighted facilities
-				(vrp.facilities * rw.weight) +
-				-- Weighted ambience
-				(vrp.ambience * rw.weight)
-			) / SUM(rw.weight) AS weighted_average_rating
-		FROM 
-			venue v
-		JOIN 
-			venue_rating vr ON v.id = vr.venue_id
-		JOIN 
-			venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
-		JOIN 
-			rating_weights rw ON DATEDIFF(NOW(), vr.date_created) BETWEEN rw.days_range_start AND rw.days_range_end
-		WHERE 
-			v.id = ?  -- Replace with the actual venue ID
-		GROUP BY 
-			v.id;`;
+		$stmt = $this->db->prepare($query);
+		$stmt->bind_param("i", $id);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		$data = [];
+		if ($result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$data[] = $row;
+			}
+		}
+		return $data;
 	}
 
 	function getWeightedRateOfAll()
