@@ -5,6 +5,7 @@
 session_start();
 include('admin/db_connect.php');
 ob_start();
+$rater  = false;
 $query = $conn->query("SELECT * FROM system_settings limit 1")->fetch_array();
 foreach ($query as $key => $value) {
   if (!is_numeric($key))

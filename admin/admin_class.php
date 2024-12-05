@@ -242,10 +242,84 @@ class Action
 			$data .= ", status = '$status' ";
 		if (empty($id)) {
 			$save = $this->db->query("INSERT INTO venue_booking set " . $data);
-			$mailer = new Mailer();
-
-			$mailer->sendMail($email, $name);
 		} else {
+			if ($status == 1) {
+				$venue = $this->db->query("SELECT * FROM venue WHERE id = $venue_id")->fetch_array();
+			
+				$testData = json_encode(['bookid' => $id, 'email' => $email, 'venuid' => $venue_id]);
+			
+				$param = $this->encryptData($testData);
+			
+				$link = "http://localhost/eventms/?rate=" . $param;
+			
+				$subject = "Venue Booking Confirmation";
+			
+				$body = "
+				<html>
+				<head>
+					<style>
+						body {
+							font-family: Arial, sans-serif;
+							background-color: #f4f7fa;
+							margin: 0;
+							padding: 0;
+						}
+						.container {
+							background: #ffffff;
+							padding: 30px;
+							border-radius: 8px;
+							box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+							max-width: 600px;
+							width: 100%;
+							margin: 0 auto;
+						}
+						h1 {
+							text-align: center;
+							color: #333;
+						}
+						p {
+							color: #555;
+							line-height: 1.6;
+						}
+						.link-container {
+							margin-top: 20px;
+							text-align: center;
+						}
+						.link-container a {
+							color: #007bff;
+							font-weight: bold;
+							text-decoration: none;
+						}
+						.link-container a:hover {
+							text-decoration: underline;
+						}
+						.footer {
+							text-align: center;
+							margin-top: 30px;
+							color: #aaa;
+						}
+					</style>
+				</head>
+				<body>
+					<div class='container'>
+						<h1>Venue Booking Confirmation</h1>
+						<p>Hello <strong>$name</strong>,</p>
+						<p>Your booking for <strong>" . $venue['venue'] . "</strong> has been successfully confirmed!</p>
+						<p>Please click the link below to rate the venue:</p>
+						<div class='link-container'>
+							<a href='$link'>Rate Venue</a>
+						</div>
+						<div class='footer'>
+							<p>&copy; 2024 Event Management System</p>
+						</div>
+					</div>
+				</body>
+				</html>";
+			
+				// Use your mailer to send the email
+				$mailer = new Mailer();
+				$send = $mailer->sendBasicMail($email, $name, $subject, $body);
+			}
 			$save = $this->db->query("UPDATE venue_booking set " . $data . " where id=" . $id);
 		}
 		if ($save)
