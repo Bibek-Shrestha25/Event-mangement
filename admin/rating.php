@@ -1,3 +1,8 @@
+<?php 
+    include 'db_connect.php';
+    $result = $conn->query("SELECT * FROM rating_weights");
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,6 +22,44 @@
 <body>
     <div class="container mt-5">
         <h2 class="mb-4 text-center">Dynamic Rating Weights</h2>
+
+        <!-- Section to display existing data -->
+        <div class="mb-4" id="existingData">
+            <h4>Existing Rating Weights</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Start Range (Days)</th>
+                        <th>End Range (Days)</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if ($result->num_rows > 0) {
+                        $row = $result->fetch_assoc();
+                        while ($row) {
+                    ?>
+                            <tr>
+                                <td><?php echo $row['days_range_start'] ?></td>
+                                <td><?php echo $row['days_range_end'] ?></td>
+                                <td><?php echo $row['weight'] ?></td>
+                            </tr>
+                    <?php
+                            $row = $result->fetch_assoc();
+                        }
+                    } else {
+                    ?>
+                        <tr>
+                            <td colspan="3" class="text-center">No data found</td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+
         <form id="ratingForm" class="card p-4 shadow-sm" action="ajax.php?action=save_rating_weight" method="POST">
             <div id="formFields">
                 <div class="row g-3 align-items-center mb-3" id="rangeGroup-0">
