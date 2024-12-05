@@ -1,10 +1,37 @@
 <?php
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 ini_set('display_errors', 1);
-include_once('./../Mailer.php');
+include_once __DIR__ . '/../Mailer.php';
 class Action
 {
 	private $db;
+	private $key = "your-test-encryption-key";
+
+
+	function encryptData($data)
+	{
+		$cipher = "aes-256-cbc";
+		$ivlen = openssl_cipher_iv_length($cipher);
+		$iv = openssl_random_pseudo_bytes($ivlen);
+		$ciphertext = openssl_encrypt($data, $cipher, $this->key, $options = 0, $iv);
+		return urlencode(base64_encode($iv . $ciphertext));
+	}
+
+	function decryptData($encryptedData)
+	{
+		try {
+			$cipher = "aes-256-cbc";
+			$ivlen = openssl_cipher_iv_length($cipher);
+			$data = base64_decode(urldecode($encryptedData));
+			$iv = substr($data, 0, $ivlen);
+			$ciphertext = substr($data, $ivlen);
+			return @openssl_decrypt($ciphertext, $cipher, $this->key, $options = 0, $iv);
+		} catch (Exception $e) {
+			throw $e;
+		}
+	}
 
 	public function __construct()
 	{
