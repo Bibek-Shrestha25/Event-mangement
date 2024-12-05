@@ -572,9 +572,6 @@ class Action
 			// Rollback transaction on error
 			$this->db->rollback();
 			throw $e;
-		} finally {
-			// Close connection
-			$this->db->close();
 		}
 		// OTP validate
 	}
