@@ -640,71 +640,87 @@ class Action
 		|------------------------------------------------------------
 		| Weighted Average = (∑(Rating×Weight)) / ∑(Weight)
 		|------------------------------------------------------------
-		| SELECT SUM(rating * weight) / SUM(weight) AS weighted_rating
-		| FROM (
- 		|   SELECT rating, 
-        |	   CASE 
-        |	      WHEN date_created > NOW() - INTERVAL 30 DAY THEN 1.5
-        |    	   ELSE 1.0
-		|		END AS weight
-		|		FROM ratings
-		|		WHERE venue_id = ?
-		|	) AS weighted_ratings;
 		|
 		*/
 
+		// Step 1: Fetch the ratings and review dates
 		$query = 'SELECT 
-					v.id AS venue_id,
-					v.venue AS venue_name,
-					COALESCE(
-						LEAST(
-							GREATEST(
-								-- Calculate weighted sum of review averages divided by total weight
-								SUM(
-									(
-										(vrp.cleanliness + vrp.service + vrp.facilities + vrp.ambience) / 4
-									) * COALESCE(
-										rw.weight,
-										(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1)  -- Fallback to oldest weight
-									)
-								) / NULLIF(
-									SUM(
-										COALESCE(
-											rw.weight,
-											(SELECT weight FROM rating_weights ORDER BY days_range_end DESC LIMIT 1)
-										)
-									), 
-									0  -- Prevent division by zero
-								),
-								1  -- Ensure the rating is not below 1
-							),
-							5  -- Ensure the rating does not exceed 5
-						), 
-						0  -- Default to 0 if no ratings exist
-					) AS weighted_average_rating
-				FROM 
-					venue v
-				LEFT JOIN 
-					venue_rating vr ON v.id = vr.venue_id
-				LEFT JOIN 
-					venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
-				LEFT JOIN 
-					rating_weights rw ON DATEDIFF(NOW(), vr.date_created) BETWEEN rw.days_range_start AND rw.days_range_end
-				WHERE 
-					v.id = ?  -- Filter for the specific venue_id (replace ? with the actual ID)
-				GROUP BY 
-					v.id, v.venue;
-			';
+vr.date_created AS review_date,
+(vrp.cleanliness + vrp.service + vrp.facilities + vrp.ambience) / 4 AS parameter_average
+FROM 
+venue v
+LEFT JOIN 
+venue_rating vr ON v.id = vr.venue_id
+LEFT JOIN 
+venue_rating_parameters vrp ON vr.id = vrp.venue_rating_id
+WHERE 
+v.id = ?';
 
 		$stmt = $this->db->prepare($query);
 		$stmt->bind_param("i", $id);
 		$stmt->execute();
 		$result = $stmt->get_result();
-		$data = [];
-		if ($result->num_rows > 0) {
-			$data = $result->fetch_assoc();
+
+		// Initialize an array to store rating data
+		$ratings = [];
+		while ($row = $result->fetch_assoc()) {
+			$ratings[] = [
+				'review_date' => $row['review_date'],
+				'parameter_average' => $row['parameter_average']
+			];
 		}
-		return $data;
+
+		// Step 2: Fetch the weight based on the review date and store in the array
+		foreach ($ratings as &$rating) {
+			$review_date = $rating['review_date'];
+
+			// Fetch the weight for the specific review date
+			$weightQuery = 'SELECT weight 
+		FROM rating_weights 
+		WHERE DATEDIFF(NOW(), ?) BETWEEN days_range_start AND days_range_end
+		ORDER BY days_range_end DESC 
+		LIMIT 1';
+
+
+			$stmt = $this->db->prepare($weightQuery);
+			$stmt->bind_param("s", $review_date);
+			$stmt->execute();
+			$weightResult = $stmt->get_result();
+
+			// If a weight is found, assign it, otherwise use the default fallback weight
+			if ($weightResult->num_rows > 0) {
+				$weight = $weightResult->fetch_assoc()['weight'];
+			} else {
+				// Fallback to the oldest weight if no weight found for the review date
+				$fallbackWeightQuery = 'SELECT weight 
+					FROM rating_weights 
+					ORDER BY days_range_end DESC 
+					LIMIT 1';
+				$stmt = $this->db->prepare($fallbackWeightQuery);
+				$stmt->execute();
+				$fallbackResult = $stmt->get_result();
+				$weight = $fallbackResult->fetch_assoc()['weight'];
+			}
+
+			$rating['weight'] = $weight;
+		}
+
+		// Step 3: Calculate the weighted average rating
+		$totalWeight = 0;
+		$weightedSum = 0;
+		foreach ($ratings as $rating) {
+			$weightedSum += $rating['parameter_average'] * $rating['weight'];
+			$totalWeight += $rating['weight'];
+		}
+
+		// Calculate the final weighted average rating
+		$finalRating = ($totalWeight > 0) ? ($weightedSum / $totalWeight) : 0;
+
+		// Ensure the rating is within the valid range of 1 to 5
+		$test['weighted_average_rating'] = max(1, min(5, $finalRating));
+
+		// Step 4: Return the final rating
+		return $test;
 	}
 
 	function getWeightedRateOfAll()
